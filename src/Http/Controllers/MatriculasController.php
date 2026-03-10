@@ -2,7 +2,7 @@
 
 namespace iEducar\Packages\Bis\Http\Controllers;
 
-use App\Process;
+use iEducar\Packages\Bis\BisProcess;
 use iEducar\Packages\Bis\Exports\BiThemeExport;
 use iEducar\Packages\Bis\Services\BiMatriculasReportsService;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class MatriculasController extends BisBaseController
 {
     public function index(Request $request): View
     {
-        Gate::authorize('view', Process::BI_MATRICULAS);
+        Gate::authorize('view', BisProcess::matriculas());
 
         $service = app(BiMatriculasReportsService::class);
         $anosLetivos = $service->getAnosLetivos();
@@ -97,7 +97,7 @@ class MatriculasController extends BisBaseController
 
     public function export(Request $request, string $report): BinaryFileResponse
     {
-        Gate::authorize('view', Process::BI_MATRICULAS);
+        Gate::authorize('view', BisProcess::matriculas());
 
         if (!isset(BiMatriculasReportsService::REPORTS[$report])) {
             abort(404);
@@ -142,7 +142,7 @@ class MatriculasController extends BisBaseController
 
     public function printPdf(Request $request)
     {
-        Gate::authorize('view', Process::BI_MATRICULAS);
+        Gate::authorize('view', BisProcess::matriculas());
 
         $sectionTitle = $request->input('sectionTitle', 'Relatório');
         $chartImage = $request->input('chartImage'); // base64 data URL

@@ -2,7 +2,7 @@
 
 namespace iEducar\Packages\Bis\Http\Controllers;
 
-use App\Process;
+use iEducar\Packages\Bis\BisProcess;
 use iEducar\Packages\Bis\Exports\BiThemeExport;
 use iEducar\Packages\Bis\Services\BiTurmasReportsService;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class TurmasController extends BisBaseController
 {
     public function index(Request $request): View
     {
-        Gate::authorize('view', Process::BI_TURMAS);
+        Gate::authorize('view', BisProcess::turmas());
 
         $service = app(BiTurmasReportsService::class);
         $anosLetivos = $service->getAnosLetivos();
@@ -88,7 +88,7 @@ class TurmasController extends BisBaseController
 
     public function export(Request $request, string $report): BinaryFileResponse
     {
-        Gate::authorize('view', Process::BI_TURMAS);
+        Gate::authorize('view', BisProcess::turmas());
 
         if (!isset(BiTurmasReportsService::REPORTS[$report])) {
             abort(404);
@@ -125,7 +125,7 @@ class TurmasController extends BisBaseController
 
     public function printPdf(Request $request)
     {
-        Gate::authorize('view', Process::BI_TURMAS);
+        Gate::authorize('view', BisProcess::turmas());
 
         $sectionTitle = $request->input('sectionTitle', 'Relatório');
         $chartImage = $request->input('chartImage');

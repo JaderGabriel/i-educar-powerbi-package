@@ -2,7 +2,7 @@
 
 namespace iEducar\Packages\Bis\Http\Controllers;
 
-use App\Process;
+use iEducar\Packages\Bis\BisProcess;
 use iEducar\Packages\Bis\Exports\BiThemeExport;
 use iEducar\Packages\Bis\Services\BiChartsService;
 use Illuminate\Http\Request;
@@ -13,23 +13,26 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ThemeController extends BisBaseController
 {
-    private const THEMES = [
-        'matriculas' => ['title' => 'BI - Matrículas', 'process' => Process::BI_MATRICULAS],
-        'turmas' => ['title' => 'BI - Turmas', 'process' => Process::BI_TURMAS],
-        'lancamentos' => ['title' => 'BI - Lançamentos', 'process' => Process::BI_LANCAMENTOS],
-        'indicadores' => ['title' => 'BI - Indicadores', 'process' => Process::BI_INDICADORES],
-        'inclusao-diversidade' => ['title' => 'BI - Inclusão e Diversidade', 'process' => Process::BI_INCLUSAO_DIVERSIDADE],
-        'busca-ativa' => ['title' => 'BI - Busca Ativa', 'process' => Process::BI_BUSCA_ATIVA],
-        'educacenso' => ['title' => 'BI - Educacenso/INEP', 'process' => Process::BI_EDUCACENSO],
-    ];
+    private static function themes(): array
+    {
+        return [
+            'matriculas' => ['title' => 'BI - Matrículas', 'process' => BisProcess::matriculas()],
+            'turmas' => ['title' => 'BI - Turmas', 'process' => BisProcess::turmas()],
+            'lancamentos' => ['title' => 'BI - Lançamentos', 'process' => BisProcess::lancamentos()],
+            'indicadores' => ['title' => 'BI - Indicadores', 'process' => BisProcess::indicadores()],
+            'inclusao-diversidade' => ['title' => 'BI - Inclusão e Diversidade', 'process' => BisProcess::inclusaoDiversidade()],
+            'busca-ativa' => ['title' => 'BI - Busca Ativa', 'process' => BisProcess::buscaAtiva()],
+            'educacenso' => ['title' => 'BI - Educacenso/INEP', 'process' => BisProcess::educacenso()],
+        ];
+    }
 
     public function show(Request $request, string $theme): View
     {
-        if (!isset(self::THEMES[$theme])) {
+        if (!isset(self::themes()[$theme])) {
             abort(404);
         }
 
-        $config = self::THEMES[$theme];
+        $config = self::themes()[$theme];
         Gate::authorize('view', $config['process']);
 
         $service = app(BiChartsService::class);
@@ -96,11 +99,11 @@ class ThemeController extends BisBaseController
 
     public function export(Request $request, string $theme): BinaryFileResponse
     {
-        if (!isset(self::THEMES[$theme])) {
+        if (!isset(self::themes()[$theme])) {
             abort(404);
         }
 
-        $config = self::THEMES[$theme];
+        $config = self::themes()[$theme];
         Gate::authorize('view', $config['process']);
 
         $ano = $request->get('ano') ? (int) $request->get('ano') : null;

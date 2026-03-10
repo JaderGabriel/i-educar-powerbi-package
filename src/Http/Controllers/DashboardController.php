@@ -2,7 +2,7 @@
 
 namespace iEducar\Packages\Bis\Http\Controllers;
 
-use App\Process;
+use iEducar\Packages\Bis\BisProcess;
 use iEducar\Packages\Bis\Exports\BiThemeExport;
 use iEducar\Packages\Bis\Services\BiDashboardService;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ class DashboardController extends BisBaseController
 {
     public function index(Request $request): View
     {
-        $biProcesses = [Process::MENU_BI, Process::BI_DASHBOARD, Process::BI_MATRICULAS, Process::BI_TURMAS, Process::BI_LANCAMENTOS, Process::BI_INDICADORES];
+        $biProcesses = [BisProcess::menuBi(), BisProcess::dashboard(), BisProcess::matriculas(), BisProcess::turmas(), BisProcess::lancamentos(), BisProcess::indicadores()];
         $canView = collect($biProcesses)->contains(fn ($p) => Gate::allows('view', $p));
         if (!$canView) {
             abort(403, 'Sem permissão para acessar o BI.');
@@ -55,7 +55,7 @@ class DashboardController extends BisBaseController
 
     public function export(Request $request): BinaryFileResponse
     {
-        $biProcesses = [Process::MENU_BI, Process::BI_DASHBOARD, Process::BI_MATRICULAS, Process::BI_TURMAS, Process::BI_LANCAMENTOS, Process::BI_INDICADORES];
+        $biProcesses = [BisProcess::menuBi(), BisProcess::dashboard(), BisProcess::matriculas(), BisProcess::turmas(), BisProcess::lancamentos(), BisProcess::indicadores()];
         $canView = collect($biProcesses)->contains(fn ($p) => Gate::allows('view', $p));
         if (!$canView) {
             abort(403, 'Sem permissão para acessar o BI.');

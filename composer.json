@@ -1,0 +1,48 @@
+{
+    "name": "serventec/i-educar-bis-package",
+    "description": "Módulo de Business Intelligence (BI) para geração de relatórios e dashboards no i-Educar",
+    "homepage": "https://github.com/serventecieducar/i-educar-powerbi-package",
+    "keywords": ["ieducar", "bi", "dashboard", "relatorios", "educacao"],
+    "type": "library",
+    "authors": [
+        {
+            "name": "Serventec",
+            "email": "contato@serventec.com.br",
+            "homepage": "https://serventec.com.br"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/serventecieducar/i-educar-powerbi-package",
+        "issues": "https://github.com/serventecieducar/i-educar-powerbi-package/issues"
+    },
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=8.3",
+        "consoletvs/charts": "^6.8",
+        "maatwebsite/excel": "^3.1"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "iEducar\\Packages\\Bis\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "iEducar\\Packages\\Bis\\Providers\\BisProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dex/composer-plug-and-play": true
+        }
+    },
+    "scripts": {
+        "format": "vendor/bin/pint"
+    }
+}

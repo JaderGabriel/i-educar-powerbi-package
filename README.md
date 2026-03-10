@@ -4,7 +4,7 @@ Módulo de Business Intelligence para geração de dashboards e relatórios anal
 
 ## Repositório
 
-- **URL:** https://github.com/serventecieducar/i-educar-powerbi-package.git
+- **URL:** git@github.com:serventecieducar/i-educar-powerbi-package.git
 
 ## Dependências
 
@@ -20,7 +20,7 @@ O i-Educar utiliza [dex/composer-plug-and-play](https://github.com/edersoares/co
 1. Clone este repositório:
 
 ```bash
-git clone https://github.com/serventecieducar/i-educar-powerbi-package.git packages/serventec/i-educar-bis-package
+git clone git@github.com:serventecieducar/i-educar-powerbi-package.git packages/serventec/i-educar-bis-package
 ```
 
 2. Adicione e resolva dependências:
@@ -41,7 +41,7 @@ Adicione ao `composer.json` do i-Educar:
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/serventecieducar/i-educar-powerbi-package.git"
+      "url": "git@github.com:serventecieducar/i-educar-powerbi-package.git"
     }
   ],
   "require": {

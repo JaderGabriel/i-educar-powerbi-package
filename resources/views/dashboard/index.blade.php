@@ -53,6 +53,11 @@
             box-shadow: var(--bi-card-shadow-hover);
             transform: translateY(-2px);
         }
+        .bi-kpi-card-link {
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
         .bi-kpi-icon {
             width: 44px;
             height: 44px;
@@ -166,27 +171,32 @@
         @endforeach
     </div>
 
+    @php
+        $ano = $anoSelecionado ?? $summary['anoAtual'] ?? now()->year;
+        $urlMatriculas = route('bis.matriculas.index', ['ano' => $ano]);
+        $urlTurmas = route('bis.turmas.index', ['ano' => $ano]);
+    @endphp
     <div class="bi-kpi-grid">
-        <div class="bi-kpi-card">
+        <a href="{{ $urlMatriculas }}" class="bi-kpi-card bi-kpi-card-link" title="Ver análise de matrículas">
             <div class="bi-kpi-icon matriculas"><i class="fa fa-user-plus"></i></div>
             <div class="bi-kpi-value">{{ number_format($summary['matriculasAtivas'] ?? 0, 0, ',', '.') }}</div>
             <div class="bi-kpi-label">Matrículas ativas</div>
-        </div>
-        <div class="bi-kpi-card">
+        </a>
+        <a href="{{ $urlTurmas }}" class="bi-kpi-card bi-kpi-card-link" title="Ver análise de turmas">
             <div class="bi-kpi-icon turmas"><i class="fa fa-object-group"></i></div>
             <div class="bi-kpi-value">{{ number_format($summary['totalTurmas'] ?? 0, 0, ',', '.') }}</div>
             <div class="bi-kpi-label">Turmas</div>
-        </div>
-        <div class="bi-kpi-card">
+        </a>
+        <a href="{{ $urlTurmas }}" class="bi-kpi-card bi-kpi-card-link" title="Ver turmas por escola">
             <div class="bi-kpi-icon escolas"><i class="fa fa-building"></i></div>
             <div class="bi-kpi-value">{{ number_format($summary['totalEscolas'] ?? 0, 0, ',', '.') }}</div>
             <div class="bi-kpi-label">Escolas</div>
-        </div>
-        <div class="bi-kpi-card">
+        </a>
+        <a href="{{ $urlMatriculas }}" class="bi-kpi-card bi-kpi-card-link" title="Ver matrículas por curso">
             <div class="bi-kpi-icon cursos"><i class="fa fa-book"></i></div>
             <div class="bi-kpi-value">{{ number_format($summary['totalCursos'] ?? 0, 0, ',', '.') }}</div>
             <div class="bi-kpi-label">Cursos</div>
-        </div>
+        </a>
     </div>
 
     <h2 class="bi-section-title">Módulos de análise</h2>
@@ -215,14 +225,14 @@
     <div class="bi-charts-row">
         @if(!empty($summary['matriculasPorCurso']) && $summary['matriculasPorCurso']->isNotEmpty())
         <div class="bi-chart-card">
-            <h3 class="bi-chart-card-title">Matrículas por Curso ({{ $summary['anoAtual'] }})</h3>
+            <h3 class="bi-chart-card-title">Matrículas por Segmento ({{ $summary['anoAtual'] }})</h3>
             <div class="bi-chart-container">
                 {!! $chartMatriculasCurso ?? '' !!}
             </div>
         </div>
         @endif
         @if(!empty($summary['turmasPorEscola']) && $summary['turmasPorEscola']->isNotEmpty())
-        <div class="bi-chart-card">
+        <div class="bi-chart-card" data-chart="turmasEscola">
             <h3 class="bi-chart-card-title">Turmas por Escola ({{ $summary['anoAtual'] }})</h3>
             <div class="bi-chart-container">
                 {!! $chartTurmasEscola ?? '' !!}
@@ -250,6 +260,32 @@
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" crossorigin="anonymous"></script>
 @if(!empty($chartMatriculasCurso)){!! $chartMatriculasCursoScript ?? '' !!}@endif
-@if(!empty($chartTurmasEscola)){!! $chartTurmasEscolaScript ?? '' !!}@endif
+@if(!empty($chartTurmasEscola))
+<script>window.bisTurmasEscolaTooltips = @json($turmasEscolaTooltips ?? []);</script>
+{!! $chartTurmasEscolaScript ?? '' !!}
+<script>
+(function(){
+    var card = document.querySelector('[data-chart="turmasEscola"]');
+    if (!card || !window.bisTurmasEscolaTooltips || !window.bisTurmasEscolaTooltips.length) return;
+    var canvas = card.querySelector('canvas');
+    if (!canvas) return;
+    var chart = Chart.instances[canvas.id] || Object.values(Chart.instances || {}).find(function(c){ return c.canvas && c.canvas.id === canvas.id; });
+    if (!chart) return;
+    var tooltips = window.bisTurmasEscolaTooltips;
+    chart.options.tooltips = chart.options.tooltips || {};
+    chart.options.tooltips.callbacks = chart.options.tooltips.callbacks || {};
+    chart.options.tooltips.callbacks.label = function(item, data) {
+        if (!tooltips[item.index]) return '';
+        var lines = tooltips[item.index].split('\n');
+        return lines.length >= 2 ? [lines[0], lines[1]] : lines;
+    };
+    chart.options.tooltips.callbacks.afterBody = function(tooltipItems) {
+        if (!tooltipItems.length || !tooltips[tooltipItems[0].index]) return [];
+        var lines = tooltips[tooltipItems[0].index].split('\n');
+        return lines.length >= 3 ? [lines[2]] : [];
+    };
+})();
+</script>
+@endif
 @if(!empty($chartEvolucao)){!! $chartEvolucaoScript ?? '' !!}@endif
 @endpush

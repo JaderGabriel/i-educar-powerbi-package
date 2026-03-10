@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\DB;
 
 class BiChartsService
 {
+    private const CHART_COLORS = [
+        '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+        '#06B6D4', '#EC4899', '#84CC16', '#F97316', '#6366F1',
+    ];
+
     /**
      * Retorna gráficos e dados tabulares para cada tema BI.
      *
@@ -179,65 +184,78 @@ class BiChartsService
         $charts = [];
 
         if ($evasao->isNotEmpty()) {
+            $vals = $evasao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray();
             $chart = new Chart();
             $chart->labels($evasao->pluck('ano')->toArray())
-                ->dataset('Taxa Evasão (%)', 'line', $evasao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray());
+                ->dataset('Taxa Evasão (%)', 'line', $vals)->backgroundColor('rgba(239, 68, 68, 0.2)')->color('#EF4444');
             $chart->title('Indicador de Evasão')->height(300);
             $charts['evasao'] = $chart;
         }
 
         if ($aprovacao->isNotEmpty()) {
+            $vals = $aprovacao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($aprovacao->pluck('ano')->toArray())
-                ->dataset('Taxa Aprovação (%)', 'bar', $aprovacao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray());
+                ->dataset('Taxa Aprovação (%)', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Indicador de Aprovação')->height(300);
             $charts['aprovacao'] = $chart;
         }
 
         if ($reprovacao->isNotEmpty()) {
+            $vals = $reprovacao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($reprovacao->pluck('ano')->toArray())
-                ->dataset('Taxa Reprovação (%)', 'bar', $reprovacao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray());
+                ->dataset('Taxa Reprovação (%)', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Taxa de Reprovação')->height(300);
             $charts['reprovacao'] = $chart;
         }
 
         if ($reclassificacao->isNotEmpty()) {
+            $vals = $reclassificacao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($reclassificacao->pluck('ano')->toArray())
-                ->dataset('Taxa Reclassificação (%)', 'bar', $reclassificacao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray());
+                ->dataset('Taxa Reclassificação (%)', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Taxa de Reclassificação')->height(300);
             $charts['reclassificacao'] = $chart;
         }
 
         if ($abandono->isNotEmpty()) {
+            $vals = $abandono->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray();
             $chart = new Chart();
             $chart->labels($abandono->pluck('ano')->toArray())
-                ->dataset('Taxa Abandono (%)', 'line', $abandono->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray());
+                ->dataset('Taxa Abandono (%)', 'line', $vals)->backgroundColor('rgba(245, 158, 11, 0.2)')->color('#F59E0B');
             $chart->title('Taxa de Abandono')->height(300);
             $charts['abandono'] = $chart;
         }
 
         if ($distorcao->isNotEmpty()) {
+            $vals = $distorcao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray();
             $chart = new Chart();
             $chart->labels($distorcao->pluck('ano')->toArray())
-                ->dataset('Taxa Distorção (%)', 'line', $distorcao->pluck('taxa')->map(fn ($v) => round((float) $v, 1))->toArray());
+                ->dataset('Taxa Distorção (%)', 'line', $vals)->backgroundColor('rgba(139, 92, 246, 0.2)')->color('#8B5CF6');
             $chart->title('Distorção Idade-Série')->height(300);
             $charts['distorcao_idade_serie'] = $chart;
         }
 
         if ($beneficios->isNotEmpty()) {
+            $vals = $beneficios->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($beneficios->pluck('beneficio')->toArray())
-                ->dataset('Alunos beneficiados', 'bar', $beneficios->pluck('total')->toArray());
+                ->dataset('Alunos beneficiados', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Benefícios Utilizados (' . $ano . ')')->height(300);
             $charts['beneficios'] = $chart;
         }
 
         if ($uniformes->isNotEmpty()) {
+            $vals = $uniformes->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($uniformes->pluck('categoria')->toArray())
-                ->dataset('Quantidade', 'bar', $uniformes->pluck('total')->toArray());
+                ->dataset('Quantidade', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Uniformes e Materiais Distribuídos (' . $ano . ')')->height(300);
             $charts['uniformes'] = $chart;
         }
@@ -271,8 +289,52 @@ class BiChartsService
             $exportData = [['ano' => '-', 'tipo' => '-', 'taxa' => 0]];
         }
 
+        $chartDescriptions = [
+            'evasao' => [
+                'titulo' => 'Indicador de Evasão',
+                'descricao' => 'Percentual de matrículas encerradas com situação de evasão (abandono) em relação ao total de matrículas do ano.',
+                'calculo' => 'Taxa = (matrículas com aprovado = 6) / total de matrículas × 100',
+            ],
+            'aprovacao' => [
+                'titulo' => 'Indicador de Aprovação',
+                'descricao' => 'Percentual de matrículas aprovadas (concluídas com aprovação, reprovação por faltas ou aprovado após exame) em relação ao total.',
+                'calculo' => 'Taxa = (matrículas com aprovado em 1, 2 ou 8) / total de matrículas × 100',
+            ],
+            'reprovacao' => [
+                'titulo' => 'Taxa de Reprovação',
+                'descricao' => 'Percentual de matrículas reprovadas (retido ou reprovado por faltas) em relação ao total de matrículas do ano.',
+                'calculo' => 'Taxa = (matrículas com aprovado = 2 ou 14) / total de matrículas × 100',
+            ],
+            'reclassificacao' => [
+                'titulo' => 'Taxa de Reclassificação',
+                'descricao' => 'Percentual de matrículas reclassificadas (aluno avançou de série por desempenho) em relação ao total.',
+                'calculo' => 'Taxa = (matrículas com aprovado = 5) / total de matrículas × 100',
+            ],
+            'abandono' => [
+                'titulo' => 'Taxa de Abandono',
+                'descricao' => 'Percentual de matrículas em situação de abandono. Correlaciona com o indicador de evasão.',
+                'calculo' => 'Taxa = (matrículas com aprovado = 6) / total de matrículas × 100',
+            ],
+            'distorcao_idade_serie' => [
+                'titulo' => 'Distorção Idade-Série',
+                'descricao' => 'Percentual de alunos cuja idade está acima da idade ideal ou máxima esperada para a série cursada.',
+                'calculo' => 'Taxa = (alunos com idade > idade_final/ideal da série) / total × 100. Idade calculada em 01/03 do ano letivo.',
+            ],
+            'beneficios' => [
+                'titulo' => 'Benefícios Utilizados',
+                'descricao' => 'Quantidade de alunos matriculados que utilizam cada tipo de benefício cadastrado (transporte, alimentação, etc.).',
+                'calculo' => 'Contagem distinta de alunos por tipo de benefício vinculado (aluno_beneficio) no ano.',
+            ],
+            'uniformes' => [
+                'titulo' => 'Uniformes e Materiais Distribuídos',
+                'descricao' => 'Quantidade de itens de uniforme e material escolar distribuídos no ano letivo.',
+                'calculo' => 'Soma das quantidades por categoria (kits completos, agasalhos, camisetas, tênis, etc.) das distribuições do ano.',
+            ],
+        ];
+
         return [
             'charts' => $charts,
+            'chartDescriptions' => $chartDescriptions,
             'data' => [
                 'evasao' => $evasao,
                 'aprovacao' => $aprovacao,
@@ -296,33 +358,41 @@ class BiChartsService
         $charts = [];
 
         if ($porDeficiencia->isNotEmpty()) {
+            $vals = $porDeficiencia->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($porDeficiencia->pluck('deficiencia')->toArray())
-                ->dataset('Matrículas', 'bar', $porDeficiencia->pluck('total')->toArray());
+                ->dataset('Matrículas', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Matrículas por Deficiência (' . $ano . ')')->height(300);
             $charts['por_deficiencia'] = $chart;
         }
 
         if ($porRaca->isNotEmpty()) {
+            $vals = $porRaca->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($porRaca->pluck('raca')->toArray())
-                ->dataset('Matrículas', 'pie', $porRaca->pluck('total')->toArray());
+                ->dataset('Matrículas', 'pie', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Matrículas por Cor/Raça (' . $ano . ')')->height(300);
             $charts['por_raca'] = $chart;
         }
 
         if ($porGenero->isNotEmpty()) {
+            $vals = $porGenero->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($porGenero->pluck('genero')->toArray())
-                ->dataset('Matrículas', 'pie', $porGenero->pluck('total')->toArray());
+                ->dataset('Matrículas', 'pie', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('Matrículas por Gênero (' . $ano . ')')->height(300);
             $charts['por_genero'] = $chart;
         }
 
         if ($porAee->isNotEmpty()) {
+            $vals = $porAee->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($porAee->pluck('tipo')->toArray())
-                ->dataset('Matrículas', 'bar', $porAee->pluck('total')->toArray());
+                ->dataset('Matrículas', 'bar', $vals)->backgroundColor($colors)->color($colors);
             $chart->title('AEE - Atendimento Educacional Especializado (' . $ano . ')')->height(300);
             $charts['por_aee'] = $chart;
         }
@@ -441,26 +511,34 @@ class BiChartsService
         $charts = [];
 
         if ($porResultado->isNotEmpty()) {
+            $vals = $porResultado->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($porResultado->pluck('resultado')->toArray())
-                ->dataset('Casos', 'pie', $porResultado->pluck('total')->toArray());
-            $chart->title('Busca Ativa por Resultado (' . $ano . ')')->height(300);
+                ->dataset('Casos', 'pie', $vals)->backgroundColor($colors)->color($colors);
+            $chart->title('Busca Ativa por Resultado (' . $ano . ')')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['por_resultado'] = $chart;
         }
 
         if ($evolucao->isNotEmpty()) {
             $chart = new Chart();
             $chart->labels($evolucao->pluck('periodo')->toArray())
-                ->dataset('Casos', 'line', $evolucao->pluck('total')->toArray());
-            $chart->title('Evolução de Casos da Busca Ativa')->height(300);
+                ->dataset('Casos', 'line', $evolucao->pluck('total')->toArray())
+                ->backgroundColor('rgba(59, 130, 246, 0.2)')->color('#3B82F6');
+            $chart->title('Evolução de Casos da Busca Ativa')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['evolucao'] = $chart;
         }
 
         if ($programaEvasao->isNotEmpty()) {
+            $vals = $programaEvasao->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
             $chart->labels($programaEvasao->pluck('status')->toArray())
-                ->dataset('Alunos', 'bar', $programaEvasao->pluck('total')->toArray());
-            $chart->title('Alunos no Programa de Evasão')->height(300);
+                ->dataset('Alunos', 'bar', $vals)->backgroundColor($colors)->color($colors);
+            $chart->title('Alunos no Programa de Evasão')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['programa_evasao'] = $chart;
         }
 
@@ -574,35 +652,47 @@ class BiChartsService
 
         if ($coberturaAlunos->isNotEmpty()) {
             $chart = new Chart();
-            $chart->labels($coberturaAlunos->pluck('ano')->toArray())
-                ->dataset('Com INEP (%)', 'bar', $coberturaAlunos->pluck('pct_inep')->map(fn ($v) => round((float) $v, 1))->toArray())
-                ->dataset('Sem INEP (%)', 'bar', $coberturaAlunos->pluck('pct_sem_inep')->map(fn ($v) => round((float) $v, 1))->toArray());
-            $chart->title('Cobertura INEP - Alunos Matriculados')->height(300);
+            $chart->labels($coberturaAlunos->pluck('ano')->toArray());
+            $chart->dataset('Com INEP (%)', 'bar', $coberturaAlunos->pluck('pct_inep')->map(fn ($v) => round((float) $v, 1))->toArray())
+                ->backgroundColor('#10B981')->color('#10B981');
+            $chart->dataset('Sem INEP (%)', 'bar', $coberturaAlunos->pluck('pct_sem_inep')->map(fn ($v) => round((float) $v, 1))->toArray())
+                ->backgroundColor('#F59E0B')->color('#F59E0B');
+            $chart->title('Cobertura INEP - Alunos Matriculados')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['cobertura_alunos'] = $chart;
         }
 
         if ($coberturaTurmas->isNotEmpty()) {
+            $vals = $coberturaTurmas->pluck('pct_inep')->map(fn ($v) => round((float) $v, 1))->toArray();
             $chart = new Chart();
-            $chart->labels($coberturaTurmas->pluck('ano')->toArray())
-                ->dataset('Turmas com INEP (%)', 'line', $coberturaTurmas->pluck('pct_inep')->map(fn ($v) => round((float) $v, 1))->toArray());
-            $chart->title('Cobertura INEP - Turmas')->height(300);
+            $chart->labels($coberturaTurmas->pluck('ano')->toArray());
+            $chart->dataset('Turmas com INEP (%)', 'line', $vals)
+                ->backgroundColor('rgba(59, 130, 246, 0.2)')->color('#3B82F6');
+            $chart->title('Cobertura INEP - Turmas')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['cobertura_turmas'] = $chart;
         }
 
         if ($coberturaEscolas->isNotEmpty()) {
             $chart = new Chart();
-            $chart->labels(['Escolas'])
-                ->dataset('Com código INEP', 'bar', [$coberturaEscolas->first()->com_inep ?? 0])
-                ->dataset('Sem código INEP', 'bar', [$coberturaEscolas->first()->sem_inep ?? 0]);
-            $chart->title('Cobertura INEP - Escolas')->height(300);
+            $chart->labels(['Escolas']);
+            $chart->dataset('Com código INEP', 'bar', [$coberturaEscolas->first()->com_inep ?? 0])
+                ->backgroundColor('#10B981')->color('#10B981');
+            $chart->dataset('Sem código INEP', 'bar', [$coberturaEscolas->first()->sem_inep ?? 0])
+                ->backgroundColor('#F59E0B')->color('#F59E0B');
+            $chart->title('Cobertura INEP - Escolas')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['cobertura_escolas'] = $chart;
         }
 
         if ($registrosPorTipo->isNotEmpty()) {
+            $vals = $registrosPorTipo->pluck('total')->toArray();
+            $colors = array_slice(self::CHART_COLORS, 0, count($vals)) ?: [self::CHART_COLORS[0]];
             $chart = new Chart();
-            $chart->labels($registrosPorTipo->pluck('tipo')->toArray())
-                ->dataset('Registros', 'bar', $registrosPorTipo->pluck('total')->toArray());
-            $chart->title('Registros Educacenso por Tipo (' . $ano . ')')->height(300);
+            $chart->labels($registrosPorTipo->pluck('tipo')->toArray());
+            $chart->dataset('Registros', 'bar', $vals)->backgroundColor($colors)->color($colors);
+            $chart->title('Registros Educacenso por Tipo (' . $ano . ')')->height(300)
+                ->options(['legend' => ['display' => true, 'position' => 'bottom']]);
             $charts['registros_tipo'] = $chart;
         }
 
@@ -623,8 +713,32 @@ class BiChartsService
             $exportData = [['ano' => '-', 'com_inep' => 0, 'sem_inep' => 0]];
         }
 
+        $chartDescriptions = [
+            'cobertura_alunos' => [
+                'titulo' => 'Cobertura INEP - Alunos Matriculados',
+                'descricao' => 'Percentual de matrículas ativas que possuem código INEP vinculado ao aluno. O código INEP é obrigatório para o envio do Censo Escolar.',
+                'calculo' => 'Com INEP = alunos com cod_aluno_inep > 0 em educacenso_cod_aluno. Sem INEP = alunos sem registro ou com código zero.',
+            ],
+            'cobertura_turmas' => [
+                'titulo' => 'Cobertura INEP - Turmas',
+                'descricao' => 'Percentual de turmas que possuem código INEP cadastrado. A cobertura adequada garante a homologação dos dados no Educacenso.',
+                'calculo' => 'Com INEP = turmas com cod_turma_inep > 0 em educacenso_cod_turma. Sem INEP = turmas sem registro ou com código zero.',
+            ],
+            'cobertura_escolas' => [
+                'titulo' => 'Cobertura INEP - Escolas',
+                'descricao' => 'Quantidade de escolas com e sem código INEP. Todas as escolas devem ter o código da unidade cadastrado para o Censo Escolar.',
+                'calculo' => 'Com código INEP = escolas com cod_escola_inep > 0 em educacenso_cod_escola. Sem código = escolas sem registro ou com código zero.',
+            ],
+            'registros_tipo' => [
+                'titulo' => 'Registros Educacenso por Tipo',
+                'descricao' => 'Quantidade de registros exportados por tipo no formato do Censo Escolar (escola, turma, docente, aluno, etc.). Útil para conferência antes do envio.',
+                'calculo' => 'Contagem de registros nas views/tabelas de exportação do Educacenso por tipo de registro para o ano selecionado.',
+            ],
+        ];
+
         return [
             'charts' => $charts,
+            'chartDescriptions' => $chartDescriptions,
             'data' => [
                 'coberturaAlunos' => $coberturaAlunos,
                 'coberturaTurmas' => $coberturaTurmas,
@@ -670,10 +784,10 @@ class BiChartsService
                 return DB::table('pmieducar.turma as t')
                     ->leftJoin('modules.educacenso_cod_turma as et', 't.cod_turma', '=', 'et.cod_turma')
                     ->selectRaw("t.ano::text as ano,
-                        count(CASE WHEN et.cod_turma_inep IS NOT NULL AND et.cod_turma_inep <> '' THEN t.cod_turma END) as com_inep,
-                        count(CASE WHEN et.cod_turma_inep IS NULL OR et.cod_turma_inep = '' THEN t.cod_turma END) as sem_inep,
+                        count(CASE WHEN et.cod_turma_inep IS NOT NULL AND et.cod_turma_inep > 0 THEN t.cod_turma END) as com_inep,
+                        count(CASE WHEN et.cod_turma_inep IS NULL OR et.cod_turma_inep = 0 THEN t.cod_turma END) as sem_inep,
                         count(*) as total,
-                        count(CASE WHEN et.cod_turma_inep IS NOT NULL AND et.cod_turma_inep <> '' THEN t.cod_turma END) * 100.0 / nullif(count(*), 0) as pct_inep")
+                        count(CASE WHEN et.cod_turma_inep IS NOT NULL AND et.cod_turma_inep > 0 THEN t.cod_turma END) * 100.0 / nullif(count(*), 0) as pct_inep")
                     ->where('t.ativo', 1)
                     ->whereBetween('t.ano', [$anoAtual - 4, $anoAtual])
                     ->groupBy('t.ano')
@@ -690,8 +804,8 @@ class BiChartsService
             config('bis.cache_ttl', 300),
             fn () => DB::table('pmieducar.escola as e')
                 ->leftJoin('modules.educacenso_cod_escola as ee', 'e.cod_escola', '=', 'ee.cod_escola')
-                ->selectRaw("count(CASE WHEN ee.cod_escola_inep IS NOT NULL AND ee.cod_escola_inep <> '' THEN e.cod_escola END) as com_inep,
-                    count(CASE WHEN ee.cod_escola_inep IS NULL OR ee.cod_escola_inep = '' THEN e.cod_escola END) as sem_inep")
+                ->selectRaw("count(CASE WHEN ee.cod_escola_inep IS NOT NULL AND ee.cod_escola_inep > 0 THEN e.cod_escola END) as com_inep,
+                    count(CASE WHEN ee.cod_escola_inep IS NULL OR ee.cod_escola_inep = 0 THEN e.cod_escola END) as sem_inep")
                 ->where('e.ativo', 1)
                 ->get()
         ) ?: collect();

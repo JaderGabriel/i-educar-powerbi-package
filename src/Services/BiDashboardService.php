@@ -65,15 +65,33 @@ class BiDashboardService
             ->limit(6)
             ->get();
 
-        $turmasPorEscola = DB::table('pmieducar.turma as t')
+        $turmasPorEscolaDetalhado = DB::table('pmieducar.turma as t')
             ->join('pmieducar.escola as e', 't.ref_ref_cod_escola', '=', 'e.cod_escola')
-            ->selectRaw('relatorio.get_nome_escola(e.cod_escola) as escola, count(*) as total')
+            ->leftJoin('pmieducar.turma_turno as tt', 't.turma_turno_id', '=', 'tt.id')
+            ->selectRaw('relatorio.get_nome_escola(e.cod_escola) as escola, tt.nome as turno, count(*) as total')
             ->where('t.ano', $anoAtual)
             ->where('t.ativo', 1)
-            ->groupByRaw('relatorio.get_nome_escola(e.cod_escola)')
-            ->orderByDesc('total')
-            ->limit(6)
+            ->groupByRaw('relatorio.get_nome_escola(e.cod_escola), tt.nome')
             ->get();
+
+        $turmasPorEscola = $turmasPorEscolaDetalhado->groupBy('escola')->map(function ($itens, $escola) {
+            $total = $itens->sum('total');
+            $porTurno = $itens->filter(fn ($r) => !empty($r->turno))->map(fn ($r) => ($r->turno ?? 'Sem turno') . ': ' . $r->total)->implode(', ');
+            if (empty(trim($porTurno))) {
+                $porTurno = '-';
+            }
+
+            $tooltipLinhas = [$escola, "Total: {$total} turmas", $porTurno];
+
+            return (object) [
+                'escola' => $escola,
+                'total' => $total,
+                'porTurno' => $porTurno,
+                'tooltip' => implode("\n", $tooltipLinhas),
+            ];
+        })->sortByDesc('total')->take(6)->values();
+
+        $turmasPorEscolaLegacy = $turmasPorEscola->map(fn ($r) => (object) ['escola' => $r->escola, 'total' => $r->total]);
 
         $evolucaoAnual = DB::table('pmieducar.matricula')
             ->selectRaw('ano::text as ano, count(*) as total')
@@ -91,10 +109,10 @@ class BiDashboardService
             );
         }
         if ($turmasPorEscola->isNotEmpty()) {
-            $charts['turmasEscola'] = $this->buildDoughnutChartLegenda(
-                $turmasPorEscola->pluck('escola')->toArray(),
-                $turmasPorEscola->pluck('total')->map(fn ($v) => (int) $v)->toArray()
-            );
+            $labels = $turmasPorEscola->pluck('escola')->toArray();
+            $values = $turmasPorEscola->pluck('total')->map(fn ($v) => (int) $v)->toArray();
+            $tooltips = $turmasPorEscola->pluck('tooltip')->toArray();
+            $charts['turmasEscola'] = $this->buildPieChartTurmasEscola($labels, $values, $tooltips);
         }
         if ($evolucaoAnual->isNotEmpty()) {
             $charts['evolucao'] = $this->buildLineChartColored(
@@ -111,7 +129,8 @@ class BiDashboardService
             'anoAtual' => $anoAtual,
             'matriculasPorSituacao' => $matriculasPorSituacao,
             'matriculasPorCurso' => $matriculasPorCurso,
-            'turmasPorEscola' => $turmasPorEscola,
+            'turmasPorEscola' => $turmasPorEscolaLegacy,
+            'turmasEscolaTooltips' => $turmasPorEscola->pluck('tooltip')->toArray(),
             'evolucaoAnual' => $evolucaoAnual,
             'charts' => $charts,
         ];
@@ -139,17 +158,24 @@ class BiDashboardService
         return $chart;
     }
 
-    /** Gráfico doughnut: barras sem nome nas colunas, legenda com cores e nomes das escolas */
-    private function buildDoughnutChartLegenda(array $labels, array $values): Chart
+    /** Gráfico pie: proporções por escola, sem legenda, tooltip completo com nome e turmas por turno */
+    private function buildPieChartTurmasEscola(array $labels, array $values, array $tooltips): Chart
     {
         $chart = new Chart();
-        $dataset = $chart->labels($labels)->dataset('Turmas', 'doughnut', $values);
+        $dataset = $chart->labels($labels)->dataset('Turmas', 'pie', $values);
         $colors = array_slice(self::CHART_COLORS, 0, count($values)) ?: [self::CHART_COLORS[0]];
         $dataset->backgroundColor($colors)->color($colors);
-        $chart->height(250)->options([
+        $chart->height(280)->options([
             'responsive' => true,
-            'legend' => ['display' => true, 'position' => 'bottom'],
-            'tooltips' => ['enabled' => true],
+            'legend' => ['display' => false],
+            'tooltips' => [
+                'enabled' => true,
+                'backgroundColor' => 'rgba(30, 41, 59, 0.95)',
+                'titleFontSize' => 13,
+                'bodyFontSize' => 12,
+                'bodySpacing' => 6,
+                'cornerRadius' => 8,
+            ],
         ]);
 
         return $chart;

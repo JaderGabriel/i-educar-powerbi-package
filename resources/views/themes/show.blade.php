@@ -92,6 +92,13 @@
                                 <div style="min-height: 300px;">
                                     {!! $chart->container() !!}
                                 </div>
+                                @if(in_array($theme, ['indicadores', 'educacenso']) && !empty($chartDescriptions[$key]))
+                                <div class="bi-chart-description" style="margin-top: 16px; padding: 14px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; font-size: 13px; color: #475569;">
+                                    <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e293b;">{{ $chartDescriptions[$key]['titulo'] ?? '' }}</p>
+                                    <p style="margin: 0 0 6px 0;">{{ $chartDescriptions[$key]['descricao'] ?? '' }}</p>
+                                    <p style="margin: 0; font-size: 12px; color: #64748b;"><strong>Como é calculado:</strong> {{ $chartDescriptions[$key]['calculo'] ?? '' }}</p>
+                                </div>
+                                @endif
                             </td>
                         </tr>
                     </table>

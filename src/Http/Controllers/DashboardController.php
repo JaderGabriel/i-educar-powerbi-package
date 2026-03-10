@@ -48,6 +48,7 @@ class DashboardController extends BisBaseController
             'chartMatriculasCursoScript' => $chartMatriculasCurso ? $chartMatriculasCurso->script() : '',
             'chartTurmasEscola' => $chartTurmasEscola?->container(),
             'chartTurmasEscolaScript' => $chartTurmasEscola ? $chartTurmasEscola->script() : '',
+            'turmasEscolaTooltips' => $summary['turmasEscolaTooltips'] ?? [],
             'chartEvolucao' => $chartEvolucao?->container(),
             'chartEvolucaoScript' => $chartEvolucao ? $chartEvolucao->script() : '',
         ]);
@@ -67,7 +68,7 @@ class DashboardController extends BisBaseController
 
         $exportData = [];
         foreach ($summary['matriculasPorCurso'] ?? [] as $r) {
-            $exportData[] = ['tipo' => 'Matrículas por Curso', 'categoria' => $r->curso, 'total' => $r->total];
+            $exportData[] = ['tipo' => 'Matrículas por Segmento', 'categoria' => $r->curso, 'total' => $r->total];
         }
         foreach ($summary['turmasPorEscola'] ?? [] as $r) {
             $exportData[] = ['tipo' => 'Turmas por Escola', 'categoria' => $r->escola, 'total' => $r->total];

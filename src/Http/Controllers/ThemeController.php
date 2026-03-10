@@ -89,6 +89,7 @@ class ThemeController extends BisBaseController
             'title' => $config['title'],
             'charts' => $result['charts'],
             'chartTitles' => $chartTitles,
+            'chartDescriptions' => $result['chartDescriptions'] ?? [],
             'exportData' => $result['exportData'],
             'exportUrl' => $exportUrl,
             'anosLetivos' => $anosLetivos,

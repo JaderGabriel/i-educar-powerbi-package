@@ -118,8 +118,8 @@
         .bi-module-icon.matriculas { background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); color: var(--bi-primary); }
         .bi-module-icon.turmas { background: linear-gradient(135deg, #ccfbf1 0%, #5eead4 100%); color: #0d9488; }
         .bi-module-icon.lancamentos { background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); color: #b45309; }
-        .bi-module-icon.indicadores { background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%); color: #7c3aed; }
-        .bi-module-icon.inclusao { background: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 100%); color: #be185d; }
+        .bi-module-icon.indicadores { background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%); color: #b45309; }
+        .bi-module-icon.inclusao { background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%); color: #0e7490; }
         .bi-module-icon.busca-ativa { background: linear-gradient(135deg, #ffedd5 0%, #fdba74 100%); color: #c2410c; }
         .bi-module-icon.educacenso { background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%); color: #4338ca; }
         .bi-module-card h3 { font-size: 16px; font-weight: 600; margin: 0 0 6px 0; color: #1e293b; }

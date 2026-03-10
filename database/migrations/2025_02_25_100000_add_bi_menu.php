@@ -36,6 +36,7 @@ class AddBiMenu extends Migration
         ]);
 
         $temas = [
+            ['title' => 'Dashboard', 'link' => '/bis', 'order' => 0, 'process' => Process::BI_DASHBOARD],
             ['title' => 'Matrículas', 'link' => '/bis/matriculas', 'order' => 1, 'process' => Process::BI_MATRICULAS],
             ['title' => 'Turmas', 'link' => '/bis/turmas', 'order' => 2, 'process' => Process::BI_TURMAS],
             ['title' => 'Lançamentos', 'link' => '/bis/lancamentos', 'order' => 3, 'process' => Process::BI_LANCAMENTOS],
@@ -63,6 +64,7 @@ class AddBiMenu extends Migration
         $schoolProcess = Process::MENU_SCHOOL;
         $biProcesses = [
             Process::MENU_BI,
+            Process::BI_DASHBOARD,
             Process::BI_MATRICULAS,
             Process::BI_TURMAS,
             Process::BI_LANCAMENTOS,
@@ -94,6 +96,7 @@ class AddBiMenu extends Migration
     public function down(): void
     {
         $biProcesses = [
+            Process::BI_DASHBOARD,
             Process::BI_MATRICULAS,
             Process::BI_TURMAS,
             Process::BI_LANCAMENTOS,

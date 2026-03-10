@@ -5,6 +5,9 @@ use App\Process;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
+/** Process::BI_DASHBOARD = 9999199 (uso direto para compatibilidade quando constante não existe) */
+const BI_DASHBOARD_PROCESS = 9999199;
+
 /**
  * Adiciona o item Dashboard como primeiro no menu BI (para instalações existentes).
  */
@@ -20,6 +23,8 @@ class AddBiDashboardMenuItem extends Migration
             return;
         }
 
+        $biProcess = BI_DASHBOARD_PROCESS;
+
         Menu::query()->updateOrCreate([
             'parent_id' => $biMenu->getKey(),
             'title' => 'Dashboard',
@@ -28,13 +33,12 @@ class AddBiDashboardMenuItem extends Migration
             'link' => '/bis',
             'order' => 0,
             'type' => 3,
-            'process' => Process::BI_DASHBOARD,
+            'process' => $biProcess,
             'parent_old' => Process::MENU_BI,
             'active' => true,
         ]);
 
         $schoolProcess = Process::MENU_SCHOOL;
-        $biProcess = Process::BI_DASHBOARD;
 
         DB::statement(
             "INSERT INTO pmieducar.menu_tipo_usuario (ref_cod_tipo_usuario, cadastra, visualiza, exclui, menu_id)
@@ -55,7 +59,8 @@ class AddBiDashboardMenuItem extends Migration
      */
     public function down(): void
     {
-        DB::statement('DELETE FROM pmieducar.menu_tipo_usuario WHERE menu_id = (SELECT id FROM public.menus WHERE process = ' . Process::BI_DASHBOARD . ')');
-        Menu::query()->where('process', Process::BI_DASHBOARD)->where('title', 'Dashboard')->delete();
+        $biProcess = BI_DASHBOARD_PROCESS;
+        DB::statement('DELETE FROM pmieducar.menu_tipo_usuario WHERE menu_id = (SELECT id FROM public.menus WHERE process = ' . $biProcess . ')');
+        Menu::query()->where('process', $biProcess)->where('title', 'Dashboard')->delete();
     }
 }

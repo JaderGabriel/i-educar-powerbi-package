@@ -3,13 +3,10 @@
 namespace iEducar\Packages\Bis\Http\Controllers;
 
 use iEducar\Packages\Bis\BisProcess;
-use iEducar\Packages\Bis\Exports\BiThemeExport;
 use iEducar\Packages\Bis\Services\BiChartsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ThemeController extends BisBaseController
 {
@@ -49,7 +46,6 @@ class ThemeController extends BisBaseController
         }
 
         $result = $service->getForTheme($theme, $anoValido);
-        $exportUrl = route('bis.theme.export', ['theme' => $theme]) . '?' . http_build_query(['ano' => $anoValido]);
         $data = $result['data'] ?? [];
 
         $chartTitles = match ($theme) {
@@ -90,34 +86,9 @@ class ThemeController extends BisBaseController
             'charts' => $result['charts'],
             'chartTitles' => $chartTitles,
             'chartDescriptions' => $result['chartDescriptions'] ?? [],
-            'exportData' => $result['exportData'],
-            'exportUrl' => $exportUrl,
             'anosLetivos' => $anosLetivos,
             'anoSelecionado' => $anoValido,
             'data' => $data,
         ]);
-    }
-
-    public function export(Request $request, string $theme): BinaryFileResponse
-    {
-        if (!isset(self::themes()[$theme])) {
-            abort(404);
-        }
-
-        $config = self::themes()[$theme];
-        Gate::authorize('view', $config['process']);
-
-        $ano = $request->get('ano') ? (int) $request->get('ano') : null;
-        $result = app(BiChartsService::class)->getForTheme($theme, $ano);
-        $exportData = $result['exportData'] ?? [];
-        $headings = !empty($exportData[0]) ? array_keys($exportData[0]) : [];
-
-        $filename = 'bi_' . $theme . '_' . now()->format('Y-m-d_His') . '.xlsx';
-
-        return Excel::download(
-            new BiThemeExport($exportData, $headings),
-            $filename,
-            \Maatwebsite\Excel\Excel::XLSX
-        );
     }
 }

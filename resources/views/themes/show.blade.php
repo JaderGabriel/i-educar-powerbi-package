@@ -30,7 +30,7 @@
 @endpush
 
 @section('content')
-    <x-bi-print-wrapper :title="$title" :export-url="$exportUrl ?? null">
+    <x-bi-print-wrapper :title="$title">
         <div class="bi-powered-wrapper" style="margin-bottom: 16px;">
             <x-bi-powered />
         </div>
@@ -60,6 +60,22 @@
                 <a href="{{ route('bis.theme', ['theme' => $theme]) }}" class="btn btn-default" style="margin-left: 8px;"><i class="fa fa-eraser"></i> Limpar filtros</a>
             </div>
         </form>
+
+        @if($theme === 'lancamentos' && !empty($data))
+            @php
+                $notasEtapa = collect($data['notasPorEtapa'] ?? []);
+                $faltasEtapa = collect($data['faltasPorEtapa'] ?? []);
+                $mediaGeral = $notasEtapa->isNotEmpty() ? $notasEtapa->avg('media') : 0;
+                $totalFaltas = $faltasEtapa->sum('total');
+            @endphp
+            @if($notasEtapa->isNotEmpty() || $faltasEtapa->isNotEmpty())
+            <div class="bi-kpi-cards bi-no-print">
+                <div class="bi-kpi-card"><div class="bi-kpi-label">Média Geral</div><div class="bi-kpi-value">{{ number_format($mediaGeral, 1, ',', '.') }}</div></div>
+                <div class="bi-kpi-card"><div class="bi-kpi-label">Total de Faltas</div><div class="bi-kpi-value">{{ number_format($totalFaltas, 0, ',', '.') }}</div></div>
+                <div class="bi-kpi-card"><div class="bi-kpi-label">Etapas com Lançamento</div><div class="bi-kpi-value">{{ $notasEtapa->pluck('etapa')->merge($faltasEtapa->pluck('etapa'))->unique()->count() }}</div></div>
+            </div>
+            @endif
+        @endif
 
         @if($theme === 'indicadores' && !empty($data))
             @php
@@ -92,7 +108,7 @@
                                 <div style="min-height: 300px;">
                                     {!! $chart->container() !!}
                                 </div>
-                                @if(in_array($theme, ['indicadores', 'educacenso']) && !empty($chartDescriptions[$key]))
+                                @if(in_array($theme, ['lancamentos', 'indicadores', 'educacenso']) && !empty($chartDescriptions[$key]))
                                 <div class="bi-chart-description" style="margin-top: 16px; padding: 14px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6; font-size: 13px; color: #475569;">
                                     <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e293b;">{{ $chartDescriptions[$key]['titulo'] ?? '' }}</p>
                                     <p style="margin: 0 0 6px 0;">{{ $chartDescriptions[$key]['descricao'] ?? '' }}</p>

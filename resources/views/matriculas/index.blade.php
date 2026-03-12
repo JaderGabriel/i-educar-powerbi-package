@@ -12,7 +12,7 @@
 @endpush
 
 @section('content')
-    <x-bi-print-wrapper :title="$title" :export-url="null" :show-top-actions="false">
+    <x-bi-print-wrapper :title="$title">
         <div class="bi-powered-wrapper" style="margin-bottom: 16px;">
             <x-bi-powered />
         </div>
@@ -126,35 +126,14 @@
 
         {{-- Relatórios --}}
         @foreach($reports ?? [] as $reportKey => $report)
-            @php
-                $exportParams = [
-                    'ano' => ($filters['ano'] ?? null) ?? 'todos',
-                    'enturmacao' => $filters['enturmacao'] ?? '',
-                    'ref_cod_instituicao' => $filters['instituicao'] ?? '',
-                    'ref_cod_escola' => $filters['escola'] ?? '',
-                    'ref_cod_curso' => $filters['curso'] ?? '',
-                    'modalidade' => $filters['modalidade'] ?? '',
-                    'dependencia' => $filters['dependencia'] ?? '',
-                    'turno' => $filters['turno'] ?? '',
-                ];
-                $exportUrl = route('bis.matriculas.export', ['report' => $reportKey]) . '?' . http_build_query(array_filter($exportParams, fn($v) => $v !== null && $v !== ''));
-            @endphp
             <div class="separator bi-no-print"></div>
-            <div class="bi-section" data-section="{{ $reportKey }}" data-section-title="{{ $report['title'] ?? $reportKey }}">
+            <div class="bi-section" data-section="{{ $reportKey }}">
                 <table class="table-default" width="100%">
                     <tr>
-                        <td class="titulo-tabela-listagem bi-print-section-title" style="text-align: left;">{{ $report['title'] ?? $reportKey }}</td>
-                        <td class="titulo-tabela-listagem bi-no-print" style="text-align: right; width: 220px;">
-                            <button type="button" class="btn btn-green bi-print-section-btn" style="margin: 0 4px 0 0; padding: 6px 12px; font-size: 12px;" data-section="{{ $reportKey }}" data-section-title="{{ $report['title'] ?? $reportKey }}" title="Imprimir este gráfico (paisagem, com cabeçalho e legenda)">
-                                <i class="fa fa-print"></i> Imprimir
-                            </button>
-                            <a href="{{ $exportUrl }}" class="btn btn-green" style="margin: 0; padding: 6px 12px; font-size: 12px;" title="Exportar para Excel">
-                                <i class="fa fa-file-excel-o"></i> Exportar Excel
-                            </a>
-                        </td>
+                        <td class="titulo-tabela-listagem" style="text-align: left;">{{ $report['title'] ?? $reportKey }}</td>
                     </tr>
                 <tr>
-                    <td colspan="2" style="padding: 15px;">
+                    <td style="padding: 15px;">
                         @if(!empty($report['chart']))
                             <div style="min-height: 300px;">
                                 {!! $report['chart']->container() !!}
@@ -179,73 +158,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" crossorigin="anonymous"></script>
 <script>
 (function() {
-    var PRINT_PDF_URL = '{{ route('bis.matriculas.print-pdf') }}';
-    var CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
     document.addEventListener('DOMContentLoaded', function() {
-        BiMatriculas.init();
+        var inst = document.getElementById('ref_cod_instituicao');
+        var escola = document.getElementById('ref_cod_escola');
+        var curso = document.getElementById('ref_cod_curso');
+        if (inst && inst.tagName === 'SELECT') inst.addEventListener('change', function() { if (escola) escola.value = ''; if (curso) curso.value = ''; });
+        if (escola) escola.addEventListener('change', function() { if (curso) curso.value = ''; });
     });
-
-    var BiMatriculas = {
-        defaultPageTitle: '',
-        init: function() {
-            var headerTitle = document.querySelector('.bi-print-page-title');
-            this.defaultPageTitle = headerTitle ? headerTitle.textContent : '';
-            this.initFilterCascade();
-            this.initPrintButtons();
-        },
-        initFilterCascade: function() {
-            var inst = document.getElementById('ref_cod_instituicao');
-            var escola = document.getElementById('ref_cod_escola');
-            var curso = document.getElementById('ref_cod_curso');
-            if (inst && inst.tagName === 'SELECT') inst.addEventListener('change', function() { if (escola) escola.value = ''; if (curso) curso.value = ''; });
-            if (escola) escola.addEventListener('change', function() { if (curso) curso.value = ''; });
-        },
-        initPrintButtons: function() {
-            var self = this;
-            document.querySelectorAll('.bi-print-section-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    self.printSection.call(self, btn.getAttribute('data-section'), btn.getAttribute('data-section-title'));
-                });
-            });
-        },
-        printSection: function(sectionId, sectionTitle) {
-            var section = document.querySelector('.bi-section[data-section="' + sectionId + '"]');
-            if (!section) return;
-
-            var canvas = section.querySelector('canvas');
-            var chartImage = canvas && canvas.toDataURL ? canvas.toDataURL('image/png') : '';
-
-            var formData = new FormData();
-            formData.append('sectionTitle', sectionTitle || 'Relatório');
-            formData.append('chartImage', chartImage);
-            formData.append('_token', CSRF_TOKEN);
-
-            fetch(PRINT_PDF_URL, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': CSRF_TOKEN,
-                    'Accept': 'application/pdf',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(function(res) {
-                if (!res.ok) throw new Error('Erro ao gerar PDF');
-                return res.blob();
-            })
-            .then(function(blob) {
-                var url = URL.createObjectURL(blob);
-                window.open(url, '_blank', 'noopener');
-                setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
-            })
-            .catch(function(err) {
-                alert('Não foi possível gerar o PDF. Tente novamente.');
-                console.error(err);
-            });
-        }
-    };
-    window.BiMatriculas = BiMatriculas;
 })();
 </script>
 @endpush

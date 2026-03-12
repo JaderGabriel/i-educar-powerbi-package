@@ -153,22 +153,51 @@ class BiChartsService
             $charts['faltas_etapa'] = $chart;
         }
 
-        $exportData = [];
-        foreach ($notasPorEtapa as $r) {
-            $exportData[] = ['etapa' => $r->etapa, 'media' => round((float) $r->media, 2), 'total_faltas' => '-'];
-        }
-        foreach ($faltasPorEtapa as $r) {
-            $exportData[] = ['etapa' => $r->etapa, 'media' => '-', 'total_faltas' => $r->total];
-        }
+        $exportData = $this->buildLancamentosExportData($notasPorEtapa, $faltasPorEtapa);
         if (empty($exportData)) {
             $exportData = [['etapa' => '-', 'media' => 0, 'total_faltas' => 0]];
         }
 
+        $chartDescriptions = [
+            'notas_etapa' => [
+                'titulo' => 'Média de Notas por Etapa',
+                'descricao' => 'Média geral das notas lançadas por etapa (bimestre/semestre) no ano letivo. Considera notas por componente curricular ou nota geral, conforme a regra de avaliação da escola.',
+                'calculo' => 'Média = soma das notas lançadas / quantidade de registros, agrupado por etapa.',
+            ],
+            'faltas_etapa' => [
+                'titulo' => 'Faltas por Etapa',
+                'descricao' => 'Total de faltas lançadas por etapa no ano letivo. Considera falta geral ou faltas por componente curricular, conforme o modelo da escola.',
+                'calculo' => 'Soma das quantidades de falta lançadas, agrupado por etapa.',
+            ],
+        ];
+
         return [
             'charts' => $charts,
+            'chartDescriptions' => $chartDescriptions,
             'data' => ['notasPorEtapa' => $notasPorEtapa, 'faltasPorEtapa' => $faltasPorEtapa],
             'exportData' => $exportData,
         ];
+    }
+
+    private function buildLancamentosExportData(Collection $notasPorEtapa, Collection $faltasPorEtapa): array
+    {
+        $etapas = $notasPorEtapa->pluck('etapa')
+            ->merge($faltasPorEtapa->pluck('etapa'))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $notasMap = $notasPorEtapa->keyBy('etapa');
+        $faltasMap = $faltasPorEtapa->keyBy('etapa');
+
+        $exportData = [];
+        foreach ($etapas as $etapa) {
+            $media = $notasMap->has($etapa) ? round((float) $notasMap->get($etapa)->media, 2) : '-';
+            $totalFaltas = $faltasMap->has($etapa) ? $faltasMap->get($etapa)->total : '-';
+            $exportData[] = ['etapa' => $etapa, 'media' => $media, 'total_faltas' => $totalFaltas];
+        }
+
+        return $exportData;
     }
 
     private function getIndicadores(int $ano): array
@@ -909,17 +938,34 @@ class BiChartsService
         return cache()->remember(
             'bis.media_notas_etapa.' . $ano,
             config('bis.cache_ttl', 300),
-            fn () => DB::table('modules.nota_componente_curricular as ncc')
-                ->join('modules.nota_aluno as na', 'ncc.nota_aluno_id', '=', 'na.id')
-                ->join('pmieducar.matricula as m', 'na.matricula_id', '=', 'm.cod_matricula')
-                ->selectRaw('ncc.etapa as etapa, round(avg(ncc.nota::numeric), 2) as media')
-                ->where('m.ano', $ano)
-                ->where('m.ativo', 1)
-                ->whereRaw("ncc.nota ~ '^[0-9]+\.?[0-9]*$'")
-                ->groupBy('ncc.etapa')
-                ->orderBy('ncc.etapa')
-                ->get()
-        );
+            function () use ($ano) {
+                $porComponente = DB::table('modules.nota_componente_curricular as ncc')
+                    ->join('modules.nota_aluno as na', 'ncc.nota_aluno_id', '=', 'na.id')
+                    ->join('pmieducar.matricula as m', 'na.matricula_id', '=', 'm.cod_matricula')
+                    ->selectRaw('ncc.etapa as etapa, round(avg(ncc.nota::numeric), 2) as media')
+                    ->where('m.ano', $ano)
+                    ->where('m.ativo', 1)
+                    ->whereNotNull('ncc.nota')
+                    ->groupBy('ncc.etapa')
+                    ->orderBy('ncc.etapa')
+                    ->get();
+
+                if ($porComponente->isNotEmpty()) {
+                    return $porComponente;
+                }
+
+                return DB::table('modules.nota_geral as ng')
+                    ->join('modules.nota_aluno as na', 'ng.nota_aluno_id', '=', 'na.id')
+                    ->join('pmieducar.matricula as m', 'na.matricula_id', '=', 'm.cod_matricula')
+                    ->selectRaw('ng.etapa as etapa, round(avg(ng.nota::numeric), 2) as media')
+                    ->where('m.ano', $ano)
+                    ->where('m.ativo', 1)
+                    ->whereNotNull('ng.nota')
+                    ->groupBy('ng.etapa')
+                    ->orderBy('ng.etapa')
+                    ->get();
+            }
+        ) ?: collect();
     }
 
     private function getFaltasPorEtapa(int $ano): Collection
@@ -927,15 +973,31 @@ class BiChartsService
         return cache()->remember(
             'bis.faltas_por_etapa.' . $ano,
             config('bis.cache_ttl', 300),
-            fn () => DB::table('modules.falta_geral as fg')
-                ->join('modules.falta_aluno as fa', 'fg.falta_aluno_id', '=', 'fa.id')
-                ->join('pmieducar.matricula as m', 'fa.matricula_id', '=', 'm.cod_matricula')
-                ->selectRaw('fg.etapa as etapa, sum(fg.quantidade) as total')
-                ->where('m.ano', $ano)
-                ->where('m.ativo', 1)
-                ->groupBy('fg.etapa')
-                ->orderBy('fg.etapa')
-                ->get()
+            function () use ($ano) {
+                $geral = DB::table('modules.falta_geral as fg')
+                    ->join('modules.falta_aluno as fa', 'fg.falta_aluno_id', '=', 'fa.id')
+                    ->join('pmieducar.matricula as m', 'fa.matricula_id', '=', 'm.cod_matricula')
+                    ->selectRaw('fg.etapa as etapa, sum(fg.quantidade) as total')
+                    ->where('m.ano', $ano)
+                    ->where('m.ativo', 1)
+                    ->groupBy('fg.etapa')
+                    ->orderBy('fg.etapa')
+                    ->get();
+
+                if ($geral->isNotEmpty()) {
+                    return $geral;
+                }
+
+                return DB::table('modules.falta_componente_curricular as fcc')
+                    ->join('modules.falta_aluno as fa', 'fcc.falta_aluno_id', '=', 'fa.id')
+                    ->join('pmieducar.matricula as m', 'fa.matricula_id', '=', 'm.cod_matricula')
+                    ->selectRaw('fcc.etapa as etapa, sum(fcc.quantidade) as total')
+                    ->where('m.ano', $ano)
+                    ->where('m.ativo', 1)
+                    ->groupBy('fcc.etapa')
+                    ->orderBy('fcc.etapa')
+                    ->get();
+            }
         ) ?: collect();
     }
 

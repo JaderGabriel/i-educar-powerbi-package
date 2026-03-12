@@ -3,13 +3,10 @@
 namespace iEducar\Packages\Bis\Http\Controllers;
 
 use iEducar\Packages\Bis\BisProcess;
-use iEducar\Packages\Bis\Exports\BiThemeExport;
 use iEducar\Packages\Bis\Services\BiDashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DashboardController extends BisBaseController
 {
@@ -52,41 +49,5 @@ class DashboardController extends BisBaseController
             'chartEvolucao' => $chartEvolucao?->container(),
             'chartEvolucaoScript' => $chartEvolucao ? $chartEvolucao->script() : '',
         ]);
-    }
-
-    public function export(Request $request): BinaryFileResponse
-    {
-        $biProcesses = [BisProcess::menuBi(), BisProcess::dashboard(), BisProcess::matriculas(), BisProcess::turmas(), BisProcess::lancamentos(), BisProcess::indicadores()];
-        $canView = collect($biProcesses)->contains(fn ($p) => Gate::allows('view', $p));
-        if (!$canView) {
-            abort(403, 'Sem permissão para acessar o BI.');
-        }
-
-        $ano = $request->get('ano') ? (int) $request->get('ano') : null;
-        $service = app(BiDashboardService::class);
-        $summary = $service->getSummary($ano);
-
-        $exportData = [];
-        foreach ($summary['matriculasPorCurso'] ?? [] as $r) {
-            $exportData[] = ['tipo' => 'Matrículas por Segmento', 'categoria' => $r->curso, 'total' => $r->total];
-        }
-        foreach ($summary['turmasPorEscola'] ?? [] as $r) {
-            $exportData[] = ['tipo' => 'Turmas por Escola', 'categoria' => $r->escola, 'total' => $r->total];
-        }
-        foreach ($summary['evolucaoAnual'] ?? [] as $r) {
-            $exportData[] = ['tipo' => 'Evolução Anual', 'ano' => $r->ano, 'total' => $r->total];
-        }
-
-        if (empty($exportData)) {
-            $exportData = [['tipo' => '-', 'categoria' => '-', 'total' => 0]];
-        }
-
-        $headings = !empty($exportData[0]) ? array_keys($exportData[0]) : [];
-
-        return Excel::download(
-            new BiThemeExport($exportData, $headings),
-            'bi_dashboard_' . now()->format('Y-m-d_His') . '.xlsx',
-            \Maatwebsite\Excel\Excel::XLSX
-        );
     }
 }

@@ -18,8 +18,7 @@
     "license": "GPL-2.0-or-later",
     "require": {
         "php": ">=8.3",
-        "consoletvs/charts": "^6.8",
-        "maatwebsite/excel": "^3.1"
+        "consoletvs/charts": "^6.8"
     },
     "require-dev": {
         "laravel/pint": "^1.16"

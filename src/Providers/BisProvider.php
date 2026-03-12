@@ -3,6 +3,7 @@
 namespace iEducar\Packages\Bis\Providers;
 
 use iEducar\Packages\Bis\Http\Middleware\EnsureBiMenu;
+use iEducar\Packages\Bis\View\Components\BiPrintWrapper;
 use iEducar\Packages\Bis\View\Components\BiPowered;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +31,7 @@ class BisProvider extends ServiceProvider
 
         // Componentes Blade do BI
         Blade::component('bi-powered', BiPowered::class);
+        Blade::component('bi-print-wrapper', BiPrintWrapper::class);
 
         $this->loadRoutesFrom(__DIR__ . '/../../routes/web.php');
 

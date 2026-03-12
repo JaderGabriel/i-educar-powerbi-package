@@ -122,7 +122,7 @@ docker compose exec php php artisan cache:clear
 php artisan cache:clear
 ```
 
-**Requisito:** O i-Educar deve possuir as constantes `Process::BI_*` e `Process::MENU_BI` em `App\Process`. Versões recentes já incluem.
+**Observação:** se o i-Educar possuir as constantes `Process::BI_*` e `Process::MENU_BI` em `App\Process`, o pacote usará esses mesmos IDs. Caso contrário, o `BisProcess` aplica valores próprios e a migration continua funcionando em instalações novas.
 
 ## Estrutura de menus
 

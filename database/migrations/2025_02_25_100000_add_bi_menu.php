@@ -4,6 +4,7 @@ use App\Menu;
 use App\Process;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use iEducar\Packages\Bis\BisProcess;
 
 /**
  * Migration do pacote BI - Adiciona menu e submenus do Business Intelligence.
@@ -20,9 +21,11 @@ class AddBiMenu extends Migration
             return;
         }
 
+        $biMenuProcess = BisProcess::menuBi();
+
         $biMenu = Menu::query()->updateOrCreate([
             'parent_id' => $escolaMenu->getKey(),
-            'old' => Process::MENU_BI,
+            'old' => $biMenuProcess,
         ], [
             'title' => 'BI',
             'description' => 'Business Intelligence - Dashboards e relatórios analíticos',
@@ -30,20 +33,20 @@ class AddBiMenu extends Migration
             'icon' => 'fa-chart-line',
             'order' => 8,
             'type' => 2,
-            'process' => Process::MENU_BI,
+            'process' => $biMenuProcess,
             'parent_old' => Process::MENU_SCHOOL,
             'active' => true,
         ]);
 
         $temas = [
-            ['title' => 'Dashboard', 'link' => '/bis', 'order' => 0, 'process' => Process::BI_DASHBOARD],
-            ['title' => 'Matrículas', 'link' => '/bis/matriculas', 'order' => 1, 'process' => Process::BI_MATRICULAS],
-            ['title' => 'Turmas', 'link' => '/bis/turmas', 'order' => 2, 'process' => Process::BI_TURMAS],
-            ['title' => 'Lançamentos', 'link' => '/bis/lancamentos', 'order' => 3, 'process' => Process::BI_LANCAMENTOS],
-            ['title' => 'Indicadores', 'link' => '/bis/indicadores', 'order' => 4, 'process' => Process::BI_INDICADORES],
-            ['title' => 'Inclusão e Diversidade', 'link' => '/bis/inclusao-diversidade', 'order' => 5, 'process' => Process::BI_INCLUSAO_DIVERSIDADE],
-            ['title' => 'Busca Ativa', 'link' => '/bis/busca-ativa', 'order' => 6, 'process' => Process::BI_BUSCA_ATIVA],
-            ['title' => 'Educacenso/INEP', 'link' => '/bis/educacenso', 'order' => 7, 'process' => Process::BI_EDUCACENSO],
+            ['title' => 'Dashboard', 'link' => '/bis', 'order' => 0, 'process' => BisProcess::dashboard()],
+            ['title' => 'Matrículas', 'link' => '/bis/matriculas', 'order' => 1, 'process' => BisProcess::matriculas()],
+            ['title' => 'Turmas', 'link' => '/bis/turmas', 'order' => 2, 'process' => BisProcess::turmas()],
+            ['title' => 'Lançamentos', 'link' => '/bis/lancamentos', 'order' => 3, 'process' => BisProcess::lancamentos()],
+            ['title' => 'Indicadores', 'link' => '/bis/indicadores', 'order' => 4, 'process' => BisProcess::indicadores()],
+            ['title' => 'Inclusão e Diversidade', 'link' => '/bis/inclusao-diversidade', 'order' => 5, 'process' => BisProcess::inclusaoDiversidade()],
+            ['title' => 'Busca Ativa', 'link' => '/bis/busca-ativa', 'order' => 6, 'process' => BisProcess::buscaAtiva()],
+            ['title' => 'Educacenso/INEP', 'link' => '/bis/educacenso', 'order' => 7, 'process' => BisProcess::educacenso()],
         ];
 
         foreach ($temas as $tema) {
@@ -56,23 +59,13 @@ class AddBiMenu extends Migration
                 'order' => $tema['order'],
                 'type' => 3,
                 'process' => $tema['process'],
-                'parent_old' => Process::MENU_BI,
+                'parent_old' => $biMenuProcess,
                 'active' => true,
             ]);
         }
 
         $schoolProcess = Process::MENU_SCHOOL;
-        $biProcesses = [
-            Process::MENU_BI,
-            Process::BI_DASHBOARD,
-            Process::BI_MATRICULAS,
-            Process::BI_TURMAS,
-            Process::BI_LANCAMENTOS,
-            Process::BI_INDICADORES,
-            Process::BI_INCLUSAO_DIVERSIDADE,
-            Process::BI_BUSCA_ATIVA,
-            Process::BI_EDUCACENSO,
-        ];
+        $biProcesses = BisProcess::all();
 
         foreach ($biProcesses as $biProcess) {
             DB::statement(
@@ -95,23 +88,16 @@ class AddBiMenu extends Migration
      */
     public function down(): void
     {
-        $biProcesses = [
-            Process::BI_DASHBOARD,
-            Process::BI_MATRICULAS,
-            Process::BI_TURMAS,
-            Process::BI_LANCAMENTOS,
-            Process::BI_INDICADORES,
-            Process::BI_INCLUSAO_DIVERSIDADE,
-            Process::BI_BUSCA_ATIVA,
-            Process::BI_EDUCACENSO,
-        ];
+        $biProcesses = BisProcess::all();
 
         foreach ($biProcesses as $process) {
             DB::statement('DELETE FROM pmieducar.menu_tipo_usuario WHERE menu_id = (SELECT id FROM public.menus WHERE process = ' . $process . ')');
             Menu::query()->where('process', $process)->delete();
         }
 
-        DB::statement('DELETE FROM pmieducar.menu_tipo_usuario WHERE menu_id = (SELECT id FROM public.menus WHERE process = ' . Process::MENU_BI . ')');
-        Menu::query()->where('process', Process::MENU_BI)->delete();
+        $biMenuProcess = BisProcess::menuBi();
+
+        DB::statement('DELETE FROM pmieducar.menu_tipo_usuario WHERE menu_id = (SELECT id FROM public.menus WHERE process = ' . $biMenuProcess . ')');
+        Menu::query()->where('process', $biMenuProcess)->delete();
     }
 }

@@ -4,7 +4,7 @@ Módulo de Business Intelligence para geração de dashboards e relatórios anal
 
 ## Repositórios
 
-Código do pacote BIS:
+Código do pacote (Power BI / BIS):
 
 - **SSH:** `git@github.com:serventecieducar/i-educar-powerbi-package.git`
 - **HTTPS:** https://github.com/serventecieducar/i-educar-powerbi-package
@@ -12,6 +12,8 @@ Código do pacote BIS:
 Projeto i-Educar (onde o pacote é utilizado):
 
 - **HTTPS:** https://github.com/portabilis/i-educar
+
+**Compatibilidade:** este pacote é compatível com i-Educar 2.10. A tag `v1.0.0` indica essa versão.
 
 ## Dependências
 
@@ -60,11 +62,11 @@ git clone https://github.com/serventecieducar/i-educar-powerbi-package.git packa
 
 ```bash
 # (Docker)
-docker compose exec php composer plug-and-play:add serventec/i-educar-bis-package @dev
+docker compose exec php composer plug-and-play:add serventec/i-educar-powerbi-package @dev
 docker compose exec php composer plug-and-play
 
 # (Local)
-composer plug-and-play:add serventec/i-educar-bis-package @dev
+composer plug-and-play:add serventec/i-educar-powerbi-package @dev
 composer plug-and-play
 ```
 
@@ -81,12 +83,12 @@ Adicione ao `composer.json` do i-Educar:
     }
   ],
   "require": {
-    "serventec/i-educar-bis-package": "^1.0"
+    "serventec/i-educar-powerbi-package": "^1.0"
   }
 }
 ```
 
-Execute `composer update serventec/i-educar-bis-package`.
+Execute `composer update serventec/i-educar-powerbi-package`.
 
 ### Pós-instalação
 

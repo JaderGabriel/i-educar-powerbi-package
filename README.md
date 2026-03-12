@@ -13,7 +13,7 @@ Projeto i-Educar (onde o pacote é utilizado):
 
 - **HTTPS:** https://github.com/portabilis/i-educar
 
-**Compatibilidade:** este pacote é compatível com i-Educar 2.10. A tag `v1.0.0` indica essa versão.
+**Compatibilidade:** este pacote é compatível com i-Educar 2.10 e 2.11. A tag `v1.2.10` indica essa versão.
 
 ## Dependências
 
@@ -102,24 +102,36 @@ docker compose exec php php artisan migrate
 php artisan migrate
 ```
 
-Publique os assets (CSS de impressão):
+Publique os assets (CSS do BI: impressão e dashboard):
 
 ```bash
-# (Docker)
+# (Docker) primeira execução
 docker compose exec php php artisan vendor:publish --tag=bis-assets
 
-# (Local)
+# (Docker) após atualizar o pacote (sobrescrever arquivos)
+docker compose exec php php artisan vendor:publish --tag=bis-assets --force
+
+# (Local) primeira execução
 php artisan vendor:publish --tag=bis-assets
+
+# (Local) após atualizar o pacote
+php artisan vendor:publish --tag=bis-assets --force
 ```
 
-Limpe o cache para refletir mudanças nos menus:
+Limpe caches para refletir mudanças de rotas, menus e views:
 
 ```bash
 # (Docker)
 docker compose exec php php artisan cache:clear
+docker compose exec php php artisan view:clear
+docker compose exec php php artisan route:clear
+docker compose exec php php artisan config:clear
 
 # (Local)
 php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
+php artisan config:clear
 ```
 
 **Observação:** se o i-Educar possuir as constantes `Process::BI_*` e `Process::MENU_BI` em `App\Process`, o pacote usará esses mesmos IDs. Caso contrário, o `BisProcess` aplica valores próprios e a migration continua funcionando em instalações novas.
@@ -177,6 +189,13 @@ Todo commit, push e criação de branch de melhorias devem ocorrer em `packages/
 ## Impressão
 
 Os dashboards e gráficos suportam impressão com cabeçalho e rodapé padrões (configuráveis em Configurações gerais).
+
+## Capturas de tela
+
+- Dashboard BI: `docs/screenshots/bis-dashboard.png`
+- Matrículas BI: `docs/screenshots/bis-matriculas.png`
+- Turmas BI: `docs/screenshots/bis-turmas.png`
+
 
 ## FAQ
 

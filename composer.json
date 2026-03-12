@@ -2,7 +2,13 @@
     "name": "serventec/i-educar-powerbi-package",
     "description": "Módulo de Business Intelligence (BI) para geração de relatórios e dashboards no i-Educar",
     "homepage": "https://github.com/serventecieducar/i-educar-powerbi-package",
-    "keywords": ["ieducar", "bi", "dashboard", "relatorios", "educacao"],
+    "keywords": [
+        "ieducar",
+        "bi",
+        "dashboard",
+        "relatorios",
+        "educacao"
+    ],
     "type": "library",
     "authors": [
         {
@@ -48,7 +54,10 @@
             ]
         },
         "ieducar": {
-            "compatible": ["2.10"]
+            "compatible": [
+                "2.10",
+                "2.11"
+            ]
         }
     },
     "config": {

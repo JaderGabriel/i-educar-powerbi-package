@@ -1,159 +1,16 @@
 @extends('layout.default')
 
 @push('styles')
-    <link rel="stylesheet" type="text/css" href="{{ Asset::get('css/ieducar.css') }}"/>
+    {{-- Fonte principal do dashboard --}}
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bi-primary: #2563eb;
-            --bi-primary-light: #3b82f6;
-            --bi-secondary: #0ea5e9;
-            --bi-success: #10b981;
-            --bi-warning: #f59e0b;
-            --bi-surface: #f8fafc;
-            --bi-card-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            --bi-card-shadow-hover: 0 4px 12px rgba(0,0,0,0.12);
-            --bi-radius: 12px;
-            --bi-radius-sm: 8px;
-        }
-        .bi-dashboard {
-            font-family: 'DM Sans', 'Open Sans', sans-serif;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 24px 16px;
-        }
-        .bi-dashboard-header {
-            margin-bottom: 32px;
-        }
-        .bi-dashboard-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 0 0 6px 0;
-        }
-        .bi-dashboard-subtitle {
-            font-size: 14px;
-            color: #64748b;
-        }
-        .bi-kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-        .bi-kpi-card {
-            background: #fff;
-            border-radius: var(--bi-radius);
-            padding: 20px;
-            box-shadow: var(--bi-card-shadow);
-            transition: box-shadow 0.2s, transform 0.2s;
-            border: 1px solid #e2e8f0;
-        }
-        .bi-kpi-card:hover {
-            box-shadow: var(--bi-card-shadow-hover);
-            transform: translateY(-2px);
-        }
-        .bi-kpi-card-link {
-            text-decoration: none;
-            color: inherit;
-            cursor: pointer;
-        }
-        .bi-kpi-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: var(--bi-radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-        .bi-kpi-icon.matriculas { background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); color: var(--bi-primary); }
-        .bi-kpi-icon.turmas { background: linear-gradient(135deg, #ccfbf1 0%, #5eead4 100%); color: #0d9488; }
-        .bi-kpi-icon.escolas { background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); color: #b45309; }
-        .bi-kpi-icon.cursos { background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%); color: #7c3aed; }
-        .bi-kpi-value {
-            font-size: 26px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        .bi-kpi-label {
-            font-size: 13px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-        .bi-section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1e293b;
-            margin: 0 0 16px 0;
-        }
-        .bi-modules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-        .bi-module-card {
-            background: #fff;
-            border-radius: var(--bi-radius);
-            padding: 24px;
-            box-shadow: var(--bi-card-shadow);
-            border: 1px solid #e2e8f0;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            transition: all 0.2s;
-        }
-        .bi-module-card:hover {
-            box-shadow: var(--bi-card-shadow-hover);
-            border-color: var(--bi-primary-light);
-            color: inherit;
-        }
-        .bi-module-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: var(--bi-radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            margin-bottom: 16px;
-        }
-        .bi-module-icon.matriculas { background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); color: var(--bi-primary); }
-        .bi-module-icon.turmas { background: linear-gradient(135deg, #ccfbf1 0%, #5eead4 100%); color: #0d9488; }
-        .bi-module-icon.lancamentos { background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%); color: #b45309; }
-        .bi-module-icon.indicadores { background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%); color: #b45309; }
-        .bi-module-icon.inclusao { background: linear-gradient(135deg, #a5f3fc 0%, #22d3ee 100%); color: #0e7490; }
-        .bi-module-icon.busca-ativa { background: linear-gradient(135deg, #ffedd5 0%, #fdba74 100%); color: #c2410c; }
-        .bi-module-icon.educacenso { background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%); color: #4338ca; }
-        .bi-module-card h3 { font-size: 16px; font-weight: 600; margin: 0 0 6px 0; color: #1e293b; }
-        .bi-module-card p { font-size: 13px; color: #64748b; margin: 0; }
-        .bi-charts-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-        }
-        .bi-chart-card {
-            background: #fff;
-            border-radius: var(--bi-radius);
-            padding: 20px;
-            box-shadow: var(--bi-card-shadow);
-            border: 1px solid #e2e8f0;
-        }
-        .bi-chart-card-title { font-size: 15px; font-weight: 600; margin: 0 0 16px 0; color: #334155; }
-        .bi-chart-container { min-height: 250px; }
-        .bi-year-switch { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
-        .bi-year-btn { padding: 6px 14px; border-radius: var(--bi-radius-sm); border: 1px solid #e2e8f0; background: #fff; color: #64748b; text-decoration: none; font-size: 13px; transition: all 0.2s; }
-        .bi-year-btn:hover { border-color: var(--bi-primary-light); color: var(--bi-primary); }
-        .bi-year-btn.active { background: var(--bi-primary); border-color: var(--bi-primary); color: #fff; }
-        .bi-powered { font-size: 12px; color: #64748b; margin-top: 8px; }
-        .bi-powered-link { color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-        .bi-powered-link:hover { color: var(--bi-primary); }
-        @media print {
-            .bi-modules-grid, .bi-no-print { display: none !important; }
-        }
-    </style>
+
+    {{-- Estilos do dashboard BI publicados pelo pacote --}}
+    <link rel="stylesheet" href="{{ asset('css/bi-dashboard.css') }}">
+
+    {{-- CSS global do i-Educar (opcional, quando disponível) --}}
+    @if (class_exists('Asset'))
+        <link rel="stylesheet" type="text/css" href="{{ Asset::get('css/ieducar.css') }}"/>
+    @endif
 @endpush
 
 @section('content')
